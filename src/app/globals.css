@@ -1,0 +1,343 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fafafb;
+  --foreground: #18181b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Inter, ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: #e0e7ff;
+  color: #312e81;
+}
+
+/* Halus: fade + naik sedikit */
+@keyframes rg-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rg-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rg-pulse-soft {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.85;
+  }
+}
+
+.animate-fade-up {
+  animation: rg-fade-up 0.5s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+}
+
+.animate-fade-in {
+  animation: rg-fade-in 0.4s ease both;
+}
+
+.animate-pulse-soft {
+  animation: rg-pulse-soft 2s ease-in-out infinite;
+}
+
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.12s; }
+.stagger-3 { animation-delay: 0.2s; }
+.stagger-4 { animation-delay: 0.28s; }
+
+/* Input focus konsisten */
+.rg-input {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.rg-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* Moving border light / border beam untuk card auth (login & register).
+   Konsep ala Magic UI BorderBeam: lapisan ::after berupa conic-gradient
+   yang sudutnya diputar via @property, lalu di-mask sehingga hanya
+   cincin border setebal padding wrapper yang terlihat. Card dalam
+   (.rg-beam-inner) tetap solid putih jadi konten tetap terbaca.
+   Murni CSS animation — ringan, tanpa JS per-frame. */
+@property --rg-beam-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes rg-beam-spin {
+  to {
+    --rg-beam-angle: 360deg;
+  }
+}
+
+.rg-beam-wrap {
+  position: relative;
+  border-radius: 1rem; /* rounded-2xl */
+  padding: 3px;
+  isolation: isolate;
+  background: #e4e4e7; /* fallback zinc-200 saat animasi belum jalan */
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+}
+
+/* Lapisan glow di belakang: gradient sama tapi di-blur supaya
+   cahaya terlihat tebal & menyala di sekitar border. */
+.rg-beam-wrap::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(1rem + 1px);
+  background: conic-gradient(
+    from var(--rg-beam-angle),
+    transparent 0deg,
+    transparent 190deg,
+    rgba(99, 102, 241, 0.25) 235deg,
+    #6366f1 280deg,
+    #a78bfa 310deg,
+    #eef2ff 330deg,
+    transparent 360deg
+  );
+  filter: blur(10px);
+  opacity: 0.85;
+  animation: rg-beam-spin 4s linear infinite;
+  pointer-events: none;
+}
+
+.rg-beam-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 3px;
+  background: conic-gradient(
+    from var(--rg-beam-angle),
+    transparent 0deg,
+    transparent 190deg,
+    rgba(99, 102, 241, 0.35) 235deg,
+    #6366f1 280deg,
+    #a78bfa 310deg,
+    #ffffff 330deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: rg-beam-spin 4s linear infinite;
+  will-change: --rg-beam-angle;
+  pointer-events: none;
+}
+
+.rg-beam-inner {
+  position: relative;
+  z-index: 1;
+  border-radius: calc(1rem - 3px);
+  background: #fff;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rg-beam-wrap::before,
+  .rg-beam-wrap::after {
+    animation: none;
+  }
+}
+
+/* Animasi handphone tap (ilustrasi murni CSS, ringan).
+   dipakai di halaman login & register. */
+@keyframes rg-phone-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(-4deg);
+  }
+}
+
+@keyframes rg-tap-press {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  15% {
+    transform: scale(0.86);
+    opacity: 0.9;
+  }
+  30% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes rg-tap-ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0.35);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes rg-nfc-blink {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.rg-tap-scene {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.rg-phone-tap {
+  position: relative;
+  width: 74px;
+  height: 74px;
+}
+
+.rg-phone-body {
+  position: absolute;
+  left: 50%;
+  top: 2px;
+  width: 40px;
+  height: 66px;
+  margin-left: -28px;
+  border-radius: 10px;
+  background: #18181b;
+  box-shadow: 0 8px 18px rgb(24 24 27 / 0.25);
+  animation: rg-phone-float 2.6s ease-in-out infinite;
+}
+
+.rg-phone-screen {
+  position: absolute;
+  inset: 4px;
+  border-radius: 7px;
+  background: linear-gradient(160deg, #6366f1, #a78bfa 70%, #e0e7ff);
+  overflow: hidden;
+}
+
+.rg-phone-notch {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 14px;
+  height: 3px;
+  margin-left: -7px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.85);
+}
+
+.rg-phone-star {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 15px;
+  text-shadow: 0 1px 4px rgb(49 46 129 / 0.5);
+}
+
+.rg-tap-finger {
+  position: absolute;
+  right: 2px;
+  bottom: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #6366f1;
+  box-shadow: 0 3px 8px rgb(99 102 241 / 0.4);
+  animation: rg-tap-press 1.8s ease-in-out infinite;
+  z-index: 2;
+}
+
+.rg-tap-ripple {
+  position: absolute;
+  right: 13px;
+  bottom: 17px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 2px solid #818cf8;
+  animation: rg-tap-ripple 1.8s ease-out infinite;
+  pointer-events: none;
+}
+
+.rg-tap-ripple-2 {
+  animation-delay: 0.6s;
+}
+
+.rg-nfc {
+  position: absolute;
+  left: 0;
+  top: 14px;
+  display: flex;
+  gap: 3px;
+}
+
+.rg-nfc i {
+  width: 3px;
+  height: 22px;
+  border-radius: 999px;
+  background: #a5b4fc;
+  animation: rg-nfc-blink 1.8s ease-in-out infinite;
+}
+
+.rg-nfc i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.rg-nfc i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rg-phone-body,
+  .rg-tap-finger,
+  .rg-tap-ripple,
+  .rg-nfc i {
+    animation: none;
+  }
+}
