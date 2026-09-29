@@ -44,6 +44,12 @@ export default async function DashboardPage() {
           >
             <span className="text-base leading-none">+</span> Aktivasi Kartu Baru
           </Link>
+          <Link
+            href="/dashboard/statistik"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 active:scale-[0.98]"
+          >
+            📊 Statistik
+          </Link>
           <form
             action={async () => {
               "use server";
@@ -143,7 +149,7 @@ export default async function DashboardPage() {
               </p>
               {card.google_review_url ? (
                 <a
-                  href={card.google_review_url}
+                  href={`/c/${encodeURIComponent(card.unique_code)}?s=test`}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-0.5 truncate text-[13px] text-indigo-600 hover:underline"

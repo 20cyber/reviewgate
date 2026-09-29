@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ActivateForm from "@/components/activate-form";
+import RatingFilter from "./rating-filter";
 
 function TrustBadge() {
   return (
@@ -20,11 +21,15 @@ function TrustBadge() {
 
 export default async function CardPage(props: PageProps<"/c/[code]">) {
   const { code } = await props.params;
+  const sp = await props.searchParams;
+  const s = Array.isArray(sp.s) ? sp.s[0] : sp.s;
   const supabase = await createClient();
 
   const { data: card } = await supabase
     .from("cards")
-    .select("unique_code,status,store_name,google_review_url")
+    .select(
+      "id,unique_code,status,store_name,google_review_url,package,owner_wa_number"
+    )
     .eq("unique_code", code)
     .single();
 
@@ -60,11 +65,33 @@ export default async function CardPage(props: PageProps<"/c/[code]">) {
     );
   }
 
-  // Kartu sudah aktif -> langsung redirect di server, TANPA halaman loading apapun.
-  // redirect() dari next/navigation menghentikan render dan mengirim HTTP redirect
-  // langsung dari server, jadi browser pelanggan langsung lompat ke Google Review.
   if (card.status === "active" && card.google_review_url) {
-    redirect(card.google_review_url);
+    // Catat scan-nya dulu, berlaku untuk semua paket
+    if (s !== "test") {
+      try {
+        await supabase.rpc("record_scan", {
+          p_code: code,
+          p_source: s === "nfc" || s === "qr" ? s : "unknown",
+        });
+      } catch {}
+    }
+
+    // PAKET 1: tanpa filter sama sekali, langsung ke Google Review
+    // (persis seperti perilaku sebelumnya)
+    if (card.package === "paket1" || !card.package) {
+      redirect(card.google_review_url);
+    }
+
+    // PAKET 2 & 3: tampilkan halaman pilih bintang dulu
+    return (
+      <RatingFilter
+        cardId={card.id}
+        storeName={card.store_name}
+        googleReviewUrl={card.google_review_url}
+        ownerWaNumber={card.owner_wa_number}
+        packageType={card.package as "paket2" | "paket3"}
+      />
+    );
   }
 
   // Kartu belum aktif — cek apakah user sudah login
@@ -77,7 +104,6 @@ export default async function CardPage(props: PageProps<"/c/[code]">) {
   return (
     <main className="mx-auto w-full max-w-md px-4 py-8 sm:py-12">
       <div className="animate-fade-up overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-        {/* Banner atas */}
         <div className="bg-indigo-600 px-6 py-8 text-center sm:px-8">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 text-2xl backdrop-blur-sm ring-1 ring-white/25">
             💳
@@ -106,7 +132,6 @@ export default async function CardPage(props: PageProps<"/c/[code]">) {
             </code>
           </div>
 
-          {/* Langkah */}
           <ol className="mt-6 space-y-3 text-left">
             {[
               { n: "1", t: "Login sebagai pemilik toko", d: "Gunakan akun pemilik bisnis kamu." },
