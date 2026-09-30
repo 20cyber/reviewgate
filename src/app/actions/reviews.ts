@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { extractTopKeywords } from "@/lib/report-utils";
 
 // Dipanggil dari rating-filter.tsx, Paket 3, saat bintang <3 dipilih
+// (dipakai baik untuk "Lewati" -> comment null, maupun "Kirim" -> comment terisi)
 export async function submitComplaint(
   cardId: string,
   rating: number,
@@ -20,54 +21,7 @@ export async function submitComplaint(
   return { error: null };
 }
 
-// Dipakai dashboard Laporan Harian - ambil komplain hari ini yang belum
-// dikirim, dikelompokkan per toko milik admin yang sedang login
-export async function getTodayComplaintsGroupedByStore() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Kamu harus login dulu.", groups: [] };
-
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-
-  const { data: myCards } = await supabase
-    .from("cards")
-    .select("id,store_name,owner_wa_number")
-    .eq("owner_id", user.id)
-    .eq("package", "paket3");
-
-  if (!myCards || myCards.length === 0) return { error: null, groups: [] };
-
-  const groups = [];
-  for (const card of myCards) {
-    const { data: complaints } = await supabase
-      .from("complaints")
-      .select("id,rating,comment,created_at")
-      .eq("card_id", card.id)
-      .eq("sent_in_daily_report", false)
-      .gte("created_at", startOfToday.toISOString())
-      .order("created_at", { ascending: true });
-
-    if (complaints && complaints.length > 0) {
-      groups.push({ card, complaints });
-    }
-  }
-  return { error: null, groups };
-}
-
-// Tandai komplain sudah dikirim (dipanggil setelah admin klik tombol kirim)
-export async function markComplaintsAsSent(complaintIds: string[]) {
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("complaints")
-    .update({ sent_in_daily_report: true })
-    .in("id", complaintIds);
-  return { error: error?.message ?? null };
-}
-
-// Dipakai halaman Rekap 2 Mingguan - daftar toko Paket 3 milik admin
+// Dipakai halaman Rekap - daftar toko Paket 3 milik admin yang sedang login
 export async function getMyPaket3Cards() {
   const supabase = await createClient();
   const {
@@ -85,7 +39,7 @@ export async function getMyPaket3Cards() {
 }
 
 // Ambil komplain dalam rentang tanggal untuk satu kartu, plus riwayat
-// ringkasan periode sebelumnya (buat perbandingan tren)
+// ringkasan periode yang masih ada (buat perbandingan periode 1 vs 2 dalam bulan berjalan)
 export async function getRekapPeriode(
   cardId: string,
   periodStart: string,
@@ -110,7 +64,7 @@ export async function getRekapPeriode(
   return { complaints: complaints ?? [], history: history ?? [] };
 }
 
-// Simpan ringkasan periode, lalu hapus data mentah periode itu
+// Simpan ringkasan periode 2-mingguan, lalu hapus data mentah periode itu
 export async function exportDanResetPeriode(
   cardId: string,
   periodStart: string,
@@ -149,4 +103,25 @@ export async function exportDanResetPeriode(
   if (deleteError) return { error: deleteError.message };
 
   return { error: null, avgRating, topKeywords };
+}
+
+// Ambil ringkasan periode 2-mingguan milik BULAN BERJALAN saja untuk satu kartu
+// (dipakai halaman Rekap Bulanan - hanya bulan yang belum "diselesaikan")
+export async function getPeriodSummariesForCard(cardId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("period_summaries")
+    .select("*")
+    .eq("card_id", cardId)
+    .order("period_start", { ascending: true });
+
+  return data ?? [];
+}
+
+// Dipanggil setelah laporan bulanan di-export/print - hapus ringkasan
+// 2-mingguan bulan itu secara permanen (tidak disimpan lintas bulan)
+export async function deletePeriodSummaries(ids: string[]) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("period_summaries").delete().in("id", ids);
+  return { error: error?.message ?? null };
 }

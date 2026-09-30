@@ -3,7 +3,7 @@ function normalizeWaNumber(nomor: string) {
   return bersih.startsWith("0") ? "62" + bersih.slice(1) : bersih;
 }
 
-// Dipakai Paket 2: bintang 1-2 langsung buka WA dengan pesan siap isi,
+// Dipakai Paket 2: bintang 1-2 langsung buka WA dengan pesan template,
 // tanpa menyimpan data apa pun ke database
 export function buildDirectWaComplaintLink(
   storeName: string,
@@ -14,26 +14,15 @@ export function buildDirectWaComplaintLink(
   return `https://wa.me/${normalizeWaNumber(waNumber)}?text=${encodeURIComponent(pesan)}`;
 }
 
-// Dipakai dashboard Laporan Harian (Paket 3): susun pesan rekap satu toko
-export function buildDailyReportWaLink(
+// Dipakai Paket 3: bintang 1-2, komentar yang diketik pelanggan langsung
+// jadi isi pesan WA ke owner (real-time, sekaligus data tersimpan terpisah)
+export function buildDirectWaComplaintLinkWithComment(
   storeName: string,
   waNumber: string,
-  complaints: { rating: number; comment: string | null }[]
+  rating: number,
+  comment: string
 ) {
-  const tanggal = new Date().toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
-  let pesan = `Halo, ini rekap pengaduan pelanggan *${storeName}* hari ini (${tanggal}):\n\n`;
-  complaints.forEach((c, i) => {
-    pesan += `${i + 1}. Bintang ${c.rating}`;
-    if (c.comment) pesan += ` - "${c.comment}"`;
-    pesan += `\n`;
-  });
-  pesan += `\nTotal: ${complaints.length} pengaduan. Semoga membantu evaluasi harian. Terima kasih - ReviewGate`;
-
+  const pesan = `Halo, saya baru saja mengunjungi ${storeName} (rating saya: ${rating} bintang). ${comment}`;
   return `https://wa.me/${normalizeWaNumber(waNumber)}?text=${encodeURIComponent(pesan)}`;
 }
 
@@ -63,4 +52,17 @@ export function extractTopKeywords(comments: (string | null)[], limit = 5) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, limit)
     .map(([word, count]) => ({ word, count }));
+}
+
+// Gabungkan kata kunci dari beberapa ringkasan periode (dipakai rekap bulanan)
+export function mergeKeywordArrays(arrays: (string[] | null)[], limit = 5) {
+  const freq: Record<string, number> = {};
+  for (const arr of arrays) {
+    if (!arr) continue;
+    for (const word of arr) freq[word] = (freq[word] || 0) + 1;
+  }
+  return Object.entries(freq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([word]) => word);
 }
