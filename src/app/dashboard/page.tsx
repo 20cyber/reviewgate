@@ -4,13 +4,19 @@ import { createClient } from "@/lib/supabase/server";
 import { getDisplayUsername } from "@/lib/username";
 import EditCardForm from "@/components/edit-card-form";
 import type { Card } from "@/lib/types";
+import BrandLanding from "@/components/brand-landing";
+import { ResetCardButton } from "./reset-card-button";
+
+const ADMIN_EMAIL = "cyberbarokah@reviewgate.internal";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login?next=/dashboard");
+  const { data: stats } = await supabase.rpc("public_stats");
+if (!user || user.email !== ADMIN_EMAIL) return <BrandLanding stats={stats} />;
+  const isAdmin = user.email === ADMIN_EMAIL;
 
   const { data: cards } = await supabase
     .from("cards")
@@ -170,7 +176,7 @@ export default async function DashboardPage() {
                   : "-"}
               </p>
 
-              <div className="mt-4 flex items-center gap-2 border-t border-zinc-100 pt-4">
+              <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-zinc-100 pt-4">
                 <EditCardForm card={card} />
                 <Link
                   href={`/c/${encodeURIComponent(card.unique_code)}`}
@@ -179,6 +185,9 @@ export default async function DashboardPage() {
                 >
                   Tes ↗
                 </Link>
+                {isAdmin && card.status === "active" && (
+  <ResetCardButton code={card.unique_code} storeName={card.store_name} />
+)}
               </div>
             </div>
           ))}

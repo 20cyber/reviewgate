@@ -1,7 +1,24 @@
 @import "tailwindcss";
 
+/* Palet utama ReviewGate: biru Google.
+   Menimpa palet indigo bawaan Tailwind, jadi semua kelas indigo-*
+   di seluruh halaman otomatis berubah menjadi biru. */
+@theme {
+  --color-indigo-50: #e8f0fe;
+  --color-indigo-100: #d2e3fc;
+  --color-indigo-200: #aecbfa;
+  --color-indigo-300: #8ab4f8;
+  --color-indigo-400: #669df6;
+  --color-indigo-500: #4285f4;
+  --color-indigo-600: #1a73e8;
+  --color-indigo-700: #1967d2;
+  --color-indigo-800: #185abc;
+  --color-indigo-900: #174ea6;
+  --color-indigo-950: #0f3a7d;
+}
+
 :root {
-  --background: #fafafb;
+  --background: #f5f7fa;
   --foreground: #18181b;
 }
 
@@ -21,8 +38,17 @@ body {
 }
 
 ::selection {
-  background: #e0e7ff;
-  color: #312e81;
+  background: #d2e3fc;
+  color: #174ea6;
+}
+
+/* Latar bergaya peta (dipakai di halaman depan, login, register) */
+.rg-map-bg {
+  background-color: #f2f0ea;
+  background-image:
+    linear-gradient(to bottom, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.1) 40%, rgb(255 255 255 / 0.6)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f2f0ea'/%3E%3Cg fill='none' stroke='%23fff' stroke-linecap='round'%3E%3Cpath d='M0 80H400' stroke-width='9'/%3E%3Cpath d='M0 250H400' stroke-width='9'/%3E%3Cpath d='M110 0V400' stroke-width='9'/%3E%3Cpath d='M280 0V400' stroke-width='9'/%3E%3Cpath d='M0 170H400' stroke-width='4'/%3E%3Cpath d='M0 330H400' stroke-width='4'/%3E%3Cpath d='M190 0V400' stroke-width='4'/%3E%3C/g%3E%3Crect x='300' y='290' width='80' height='70' rx='14' fill='%23cfe8c6'/%3E%3C/svg%3E");
+  background-size: auto, 400px 400px;
 }
 
 /* Halus: fade + naik sedikit */
@@ -81,16 +107,15 @@ body {
 }
 .rg-input:focus {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.18);
 }
 
 /* Moving border light / border beam untuk card auth (login & register).
-   Konsep ala Magic UI BorderBeam: lapisan ::after berupa conic-gradient
-   yang sudutnya diputar via @property, lalu di-mask sehingga hanya
-   cincin border setebal padding wrapper yang terlihat. Card dalam
+   Lapisan ::after berupa conic-gradient yang sudutnya diputar via @property,
+   lalu di-mask sehingga hanya cincin border yang terlihat. Card dalam
    (.rg-beam-inner) tetap solid putih jadi konten tetap terbaca.
-   Murni CSS animation — ringan, tanpa JS per-frame. */
+   Murni CSS animation, ringan, tanpa JS per-frame. */
 @property --rg-beam-angle {
   syntax: "<angle>";
   initial-value: 0deg;
@@ -105,28 +130,26 @@ body {
 
 .rg-beam-wrap {
   position: relative;
-  border-radius: 1rem; /* rounded-2xl */
+  border-radius: 1.5rem;
   padding: 3px;
   isolation: isolate;
-  background: #e4e4e7; /* fallback zinc-200 saat animasi belum jalan */
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  background: #e4e4e7;
+  box-shadow: 0 10px 30px rgb(24 24 27 / 0.08);
 }
 
-/* Lapisan glow di belakang: gradient sama tapi di-blur supaya
-   cahaya terlihat tebal & menyala di sekitar border. */
 .rg-beam-wrap::before {
   content: "";
   position: absolute;
   inset: -1px;
-  border-radius: calc(1rem + 1px);
+  border-radius: calc(1.5rem + 1px);
   background: conic-gradient(
     from var(--rg-beam-angle),
     transparent 0deg,
     transparent 190deg,
-    rgba(99, 102, 241, 0.25) 235deg,
-    #6366f1 280deg,
-    #a78bfa 310deg,
-    #eef2ff 330deg,
+    rgba(26, 115, 232, 0.25) 235deg,
+    #1a73e8 280deg,
+    #669df6 310deg,
+    #e8f0fe 330deg,
     transparent 360deg
   );
   filter: blur(10px);
@@ -145,9 +168,9 @@ body {
     from var(--rg-beam-angle),
     transparent 0deg,
     transparent 190deg,
-    rgba(99, 102, 241, 0.35) 235deg,
-    #6366f1 280deg,
-    #a78bfa 310deg,
+    rgba(26, 115, 232, 0.35) 235deg,
+    #1a73e8 280deg,
+    #669df6 310deg,
     #ffffff 330deg,
     transparent 360deg
   );
@@ -163,7 +186,7 @@ body {
 .rg-beam-inner {
   position: relative;
   z-index: 1;
-  border-radius: calc(1rem - 3px);
+  border-radius: calc(1.5rem - 3px);
   background: #fff;
   overflow: hidden;
 }
@@ -176,7 +199,7 @@ body {
 }
 
 /* Animasi handphone tap (ilustrasi murni CSS, ringan).
-   dipakai di halaman login & register. */
+   Dipakai di halaman login & register. */
 @keyframes rg-phone-float {
   0%,
   100% {
@@ -253,7 +276,7 @@ body {
   position: absolute;
   inset: 4px;
   border-radius: 7px;
-  background: linear-gradient(160deg, #6366f1, #a78bfa 70%, #e0e7ff);
+  background: linear-gradient(160deg, #1a73e8, #669df6 70%, #e8f0fe);
   overflow: hidden;
 }
 
@@ -276,7 +299,7 @@ body {
   justify-content: center;
   color: #fff;
   font-size: 15px;
-  text-shadow: 0 1px 4px rgb(49 46 129 / 0.5);
+  text-shadow: 0 1px 4px rgb(23 78 166 / 0.5);
 }
 
 .rg-tap-finger {
@@ -287,8 +310,8 @@ body {
   height: 22px;
   border-radius: 999px;
   background: #fff;
-  border: 2px solid #6366f1;
-  box-shadow: 0 3px 8px rgb(99 102 241 / 0.4);
+  border: 2px solid #1a73e8;
+  box-shadow: 0 3px 8px rgb(26 115 232 / 0.4);
   animation: rg-tap-press 1.8s ease-in-out infinite;
   z-index: 2;
 }
@@ -300,7 +323,7 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 999px;
-  border: 2px solid #818cf8;
+  border: 2px solid #8ab4f8;
   animation: rg-tap-ripple 1.8s ease-out infinite;
   pointer-events: none;
 }
@@ -321,7 +344,7 @@ body {
   width: 3px;
   height: 22px;
   border-radius: 999px;
-  background: #a5b4fc;
+  background: #aecbfa;
   animation: rg-nfc-blink 1.8s ease-in-out infinite;
 }
 
@@ -340,4 +363,44 @@ body {
   .rg-nfc i {
     animation: none;
   }
+}
+
+/* Mode gelap: menukar palet warna, tanpa mengubah kelas di halaman */
+.dark {
+  color-scheme: dark;
+  --background: #0b1220;
+  --foreground: #e5e7eb;
+  --color-white: #151c2b;
+  --color-zinc-50: #0f1623;
+  --color-zinc-100: #1b2435;
+  --color-zinc-200: #2a3547;
+  --color-zinc-300: #3b475c;
+  --color-zinc-400: #7b8799;
+  --color-zinc-500: #98a2b3;
+  --color-zinc-600: #b4bdca;
+  --color-zinc-700: #cbd2dc;
+  --color-zinc-800: #e2e6ec;
+  --color-zinc-900: #f3f4f6;
+}
+.dark .text-white { color: #fff; }
+.dark .rg-beam-inner { background: #151c2b; }
+.dark .rg-map-bg {
+  background-color: #0b1220;
+  background-image: linear-gradient(to bottom, #101826, #0b1220);
+}
+
+/* Bagian yang selalu terang (halaman bintang pelanggan) */
+.light-scope {
+  color-scheme: light;
+  --color-white: #fff;
+  --color-zinc-50: #fafafa;
+  --color-zinc-100: #f4f4f5;
+  --color-zinc-200: #e4e4e7;
+  --color-zinc-300: #d4d4d8;
+  --color-zinc-400: #9f9fa9;
+  --color-zinc-500: #71717b;
+  --color-zinc-600: #52525c;
+  --color-zinc-700: #3f3f47;
+  --color-zinc-800: #27272a;
+  --color-zinc-900: #18181b;
 }

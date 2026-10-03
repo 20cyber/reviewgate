@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ActivateForm from "@/components/activate-form";
 import RatingFilter from "./rating-filter";
+import { isAdminEmail, ADMIN_WA } from "@/lib/admin";
 
 function TrustBadge() {
   return (
@@ -94,103 +95,56 @@ export default async function CardPage(props: PageProps<"/c/[code]">) {
     );
   }
 
-  // Kartu belum aktif — cek apakah user sudah login
+    // Kartu belum aktif: hanya admin yang bisa mengaktifkan
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const next = `/c/${encodeURIComponent(code)}`;
+  const isAdmin = isAdminEmail(user?.email);
+  const wa =
+    `https://wa.me/${ADMIN_WA}?text=` +
+    encodeURIComponent(`Halo admin ReviewGate, kartu ${code} belum aktif.`);
 
   return (
     <main className="mx-auto w-full max-w-md px-4 py-8 sm:py-12">
       <div className="animate-fade-up overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
         <div className="bg-indigo-600 px-6 py-8 text-center sm:px-8">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 text-2xl backdrop-blur-sm ring-1 ring-white/25">
-            💳
-          </div>
-          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-indigo-100">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-100">
             ReviewGate
           </p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white">
             Kartu Belum Aktif
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-indigo-100">
-            Kartu ini asli dan siap dipakai. Aktivasi sekali oleh pemilik toko,
-            setelah itu pelanggan otomatis ke Google Review.
+            Kartu ini asli dan siap dipakai. Aktivasi dilakukan oleh admin
+            ReviewGate, setelah itu scan otomatis menuju Google Review.
           </p>
         </div>
-
-        <div className="px-6 py-6 sm:px-8">
-          <div className="flex items-center justify-center">
-            <TrustBadge />
-          </div>
-
+        <div className="px-6 py-6 text-center sm:px-8">
+          <TrustBadge />
           <div className="mt-4 flex items-center justify-center gap-2">
             <span className="text-xs text-zinc-500">Kode kartu:</span>
             <code className="rounded-lg bg-zinc-100 px-2.5 py-1 font-mono text-sm font-semibold text-zinc-800 ring-1 ring-zinc-200">
               {code}
             </code>
           </div>
-
-          <ol className="mt-6 space-y-3 text-left">
-            {[
-              { n: "1", t: "Login sebagai pemilik toko", d: "Gunakan akun pemilik bisnis kamu." },
-              { n: "2", t: "Isi nama toko & link review", d: "Cukup sekali, tersimpan permanen." },
-              { n: "3", t: "Kartu langsung aktif", d: "Scan berikutnya auto ke Google Review." },
-            ].map((s) => (
-              <li key={s.n} className="flex gap-3 rounded-xl bg-zinc-50 p-3 ring-1 ring-zinc-100">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
-                  {s.n}
-                </span>
-                <span>
-                  <span className="block text-sm font-semibold text-zinc-900">{s.t}</span>
-                  <span className="block text-xs text-zinc-500">{s.d}</span>
-                </span>
-              </li>
-            ))}
-          </ol>
-
-          {!user ? (
-            <div className="animate-fade-up stagger-2 mt-6 flex flex-col gap-2.5">
-              <Link
-                href={`/login?next=${next}`}
-                className="inline-flex w-full items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 hover:shadow active:scale-[0.99]"
-              >
-                Login untuk Aktivasi →
-              </Link>
-              <Link
-                href={`/register?next=${next}`}
-                className="inline-flex w-full items-center justify-center rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 transition-all hover:bg-zinc-50 active:scale-[0.99]"
-              >
-                Belum punya akun? Daftar gratis
-              </Link>
-              <p className="mt-1 text-center text-xs leading-relaxed text-zinc-400">
-                Khusus pemilik kartu. Pelanggan tidak perlu login — setelah
-                aktif, halaman ini otomatis mengarah ke Google Review.
-              </p>
-            </div>
-          ) : (
-            <div className="animate-fade-in mt-6 rounded-xl bg-emerald-50 p-4 text-center ring-1 ring-emerald-200">
-              <p className="text-sm font-semibold text-emerald-800">
-                ✓ Kamu sudah login
-              </p>
-              <p className="mt-0.5 text-xs text-emerald-700">
-                Lengkapi form aktivasi di bawah untuk mengaktifkan kartu ini.
-              </p>
-            </div>
+          {!isAdmin && (
+            <a
+              href={wa}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-[0.99]"
+            >
+              Hubungi Admin
+            </a>
           )}
         </div>
       </div>
 
-      {user && (
-        <div className="animate-fade-up stagger-3 mt-4">
+      {isAdmin && (
+        <div className="animate-fade-up stagger-2 mt-4">
           <ActivateForm initialCode={code} />
         </div>
       )}
-
-      <p className="mt-6 text-center text-xs text-zinc-400">
-        🔒 Aman — reviewgate.id • Dilindungi aktivasi pemilik toko
-      </p>
     </main>
   );
 }

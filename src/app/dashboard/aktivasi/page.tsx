@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ActivateForm from "@/components/activate-form";
+import { isAdminEmail } from "@/lib/admin";
 
 export default async function AktivasiPage(props: PageProps<"/dashboard/aktivasi">) {
   const supabase = await createClient();
@@ -9,6 +10,7 @@ export default async function AktivasiPage(props: PageProps<"/dashboard/aktivasi
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/dashboard/aktivasi");
+  if (!isAdminEmail(user.email)) redirect("/dashboard");
 
   const searchParams = await props.searchParams;
   const preset = typeof searchParams?.code === "string" ? searchParams.code : "";

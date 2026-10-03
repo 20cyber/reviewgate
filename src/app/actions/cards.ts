@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeReviewUrl } from "@/lib/review-url";
+import { isAdminEmail } from "@/lib/admin";
 
 export async function activateCard(
   uniqueCode: string,
@@ -28,7 +29,7 @@ export async function activateCard(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Kamu harus login dulu." };
+  if (!user || !isAdminEmail(user.email)) return { error: "Hanya admin yang bisa mengelola kartu." };
 
   const { data: existing, error: readError } = await supabase
     .from("cards")
@@ -83,7 +84,7 @@ export async function updateCard(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "Kamu harus login dulu." };
+  if (!user || !isAdminEmail(user.email)) return { error: "Hanya admin yang bisa mengelola kartu." };
 
   const { error } = await supabase
     .from("cards")

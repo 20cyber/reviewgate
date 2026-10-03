@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+const WA = "https://wa.me/6283190033720";
 
 export default function Home() {
   const router = useRouter();
@@ -33,13 +34,13 @@ export default function Home() {
             href="/dashboard"
             className="w-full rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 hover:shadow-md active:scale-[0.99] sm:w-auto"
           >
-            Mulai Aktivasi Kartu →
+            Kenali ReviewGate →
           </Link>
           <Link
-            href="/login"
+            href={WA}
             className="w-full rounded-xl border border-zinc-200 bg-white px-6 py-3 text-sm font-semibold text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 active:scale-[0.99] sm:w-auto"
           >
-            Saya sudah punya kartu
+            Hubungi Admin
           </Link>
         </div>
 
@@ -81,11 +82,11 @@ export default function Home() {
             {
               icon: "⚙️",
               title: "Pemilik aktivasi sekali",
-              desc: "Login & isi nama toko + link Google Review. Tersimpan permanen.",
+              desc: "Admin mengisi nama toko dan link Google Review. Tersimpan permanen.",
             },
             {
               icon: "⭐",
-              title: "Auto ke Google Review",
+              title: "Admin mengaktifkan kartu",
               desc: "Setiap kunjungan berikutnya langsung diarahkan — tanpa login.",
             },
           ].map((s, i) => (
@@ -159,10 +160,10 @@ export default function Home() {
                 </div>
               </div>
               <Link
-                href="/register"
+                href={WA}
                 className="mt-6 inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition-all hover:bg-zinc-100 active:scale-[0.99]"
               >
-                Daftar gratis sebagai pemilik toko
+                Hubungi Admin untuk Memesan
               </Link>
             </div>
           </div>
